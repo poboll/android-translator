@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.caiths.translator">
+
+    <!--  权限  -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 为了解决Android 10及以上版本的设备标识符访问问题 -->
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" 
+                    tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".Translator"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_icon"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Translator"
+        android:requestLegacyExternalStorage="true">
+
+        <!-- Baidu App ID -->
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="6907813" /> 
+        <!-- 也可以尝试使用 Secret Key 如果 App ID 单独不行，但这不太常见 -->
+        <!-- <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="cBTPC1IlkuLAq1so8cjaZcaxmenpbX33" /> -->
+
+        <!-- 百度语音SDK配置 -->
+        <meta-data
+            android:name="galaxy.host"
+            android:value="true" />
+
+        <activity
+            android:name="com.caiths.translator.activity.LaunchActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.caiths.translator.activity.NavigationActivity"/>
+
+        <!--   声明provider     -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.file-provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+</manifest>

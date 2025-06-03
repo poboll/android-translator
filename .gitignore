@@ -1,0 +1,94 @@
+# Android
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+.gradle/
+local.properties
+proguard/
+*.log
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Gradle
+.gradle
+/build/
+/*/build/
+gradlew
+gradlew.bat
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# PHP
+*.log
+vendor/
+composer.phar
+composer.lock
+.env
+.env.local
+.env.*.local
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+access.log
+error.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Keys and sensitive data
+*.keystore
+*.jks
+api_keys.txt
+config.properties
+
+# Images (keep only essential ones)
+*.png
+*.jpg
+*.jpeg
+*.gif
+!app_icon.png
+!logo.png
+
+# Backup files
+*.bak
+*.backup
+*.old
