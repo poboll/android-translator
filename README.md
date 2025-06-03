@@ -12,8 +12,16 @@ _✨ 基于AI技术的智能多语言翻译应用 ✨_
 
 [简体中文](README.md) | [English](README_EN.md)
 
-<img src="images/Screenshot_20250602_213150.png" width="200"> <img src="images/Screenshot_20250602_213308.png" width="200"> <img src="images/Screenshot_20250603_213954.png" width="200">
-<img src="images/Screenshot_20250603_214235.png" width="200"> <img src="images/Screenshot_20250603_214245.png" width="200"> <img src="images/Screenshot_20250603_214438.png" width="200">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250602_213150.png" width="200">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250602_213308.png" width="200">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250603_213954.png" width="200">
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250603_214235.png" width="200">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250603_214245.png" width="200">
+  <img src="https://cdn.jsdelivr.net/gh/poboll/android-translator@main/images/Screenshot_20250603_214438.png" width="200">
+</div>
 
 </div>
 
