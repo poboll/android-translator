@@ -87,12 +87,11 @@ config.properties
 *.gif
 !app_icon.png
 !logo.png
-!images/*.png
-!images/*.jpg
-!images/*.jpeg
-!images/*.gif
 
 # Backup files
 *.bak
 *.backup
 *.old
+
+# trae
+.trae/
