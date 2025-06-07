@@ -314,13 +314,1701 @@ public class LaunchConfigManager {
 }
 ```
 
-#### 2.1.4 用户界面设计
+#### 2.1.4 用户界面设计与体验优化
 
-**视觉设计规范**：
-- **色彩方案**：采用渐变蓝色作为主色调，体现科技感和专业性
-- **字体选择**：使用系统默认字体，确保在不同设备上的一致性
-- **布局结构**：采用居中对称布局，营造稳定和谐的视觉效果
-- **动画效果**：Logo淡入动画配合轻微的缩放效果，增强视觉吸引力
+**视觉设计规范与美学原则**：
+
+1. **色彩系统设计**：
+- **主色调选择**：采用渐变蓝色(#1E88E5 → #1565C0)作为主色调，体现科技感和专业性
+- **辅助色彩**：搭配浅灰(#F5F5F5)和深灰(#212121)作为文本与背景色，提升可读性
+- **强调色**：使用橙色(#FF9800)作为重点信息和交互元素的点缀，增强视觉层次
+- **透明度运用**：合理使用透明度变化(alpha: 0.8-1.0)，营造轻盈现代的视觉效果
+
+2. **字体排版规范**：
+- **主字体**：采用无衬线字体Roboto，确保在Android设备上的显示一致性
+- **字号层级**：
+  * 应用名称：24sp，粗体
+  * 版本信息：14sp，常规
+  * 状态提示：12sp，常规
+- **行高设置**：采用1.5倍行距，优化长文本的可读性
+- **字间距**：标题采用-0.5sp字间距，正文保持默认间距
+
+3. **布局结构设计**：
+- **网格系统**：基于8dp网格系统进行元素排布，确保视觉对齐
+- **间距规范**：
+  * 元素内间距：16dp
+  * 元素间距：24dp
+  * 边距：32dp
+- **居中对称**：核心元素采用居中对称布局，营造稳定和谐的视觉效果
+- **响应式适配**：通过约束布局(ConstraintLayout)实现不同屏幕尺寸的自适应
+
+4. **动画系统设计**：
+- **Logo动画**：
+  * 淡入效果：时长300ms，缓动函数为AccelerateDecelerateInterpolator
+  * 缩放效果：从0.8倍缩放到1.0倍，时长400ms
+  * 旋转效果：360度旋转，时长600ms
+- **文本动画**：
+  * 交错淡入：每个文本元素间隔100ms依次呈现
+  * 上移效果：配合透明度变化，营造轻盈感
+- **加载动画**：
+  * 自定义进度条动画，使用Material Design风格
+  * 循环动画时长：1500ms
+
+5. **交互反馈设计**：
+- **触摸反馈**：所有可点击元素添加水波纹效果(android:background="?attr/selectableItemBackground")
+- **状态转换**：通过状态动画平滑过渡不同加载阶段
+- **加载提示**：使用进度条配合文字提示，传达系统初始化进度
+- **错误反馈**：优雅处理初始化异常情况，提供重试选项
+
+6. **可访问性优化**：
+- **颜色对比度**：确保文本与背景色对比度符合WCAG 2.0标准(≥4.5:1)
+- **触控区域**：可点击元素最小触控区域设置为48dp×48dp
+- **内容描述**：为所有图片和图标设置contentDescription属性
+- **字体缩放**：支持系统字体大小调节，适配视力障碍用户
+
+7. **性能优化与加载策略**：
+
+**冷启动优化**：
+- **启动窗口优化**：
+  * 使用SplashScreen API实现无缝过渡
+  * 自定义启动主题，避免白屏/黑屏
+  * 设置windowBackground减少视觉空白
+- **初始化优化**：
+  * 延迟初始化非必要组件
+  * 使用懒加载模式处理次要功能
+  * 优化Application onCreate过程
+
+**热启动优化**：
+- **内存管理**：
+  * 合理使用进程优先级
+  * 实现低内存自动释放机制
+  * 避免内存泄漏和OOM问题
+- **缓存策略**：
+  * 实现多级缓存机制
+  * 合理设置缓存过期策略
+  * 优化缓存读写性能
+
+**资源加载优化**：
+```java
+// 资源加载管理器
+public class ResourceLoadManager {
+    private static final String TAG = "ResourceLoadManager";
+    private Context context;
+    private CacheManager cacheManager;
+
+    public ResourceLoadManager(Context context) {
+        this.context = context;
+        this.cacheManager = new CacheManager(context);
+    }
+
+    /**
+     * 异步预加载关键资源
+     */
+    public void preloadResources() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 预加载图片资源
+                preloadImages();
+                // 预加载配置文件
+                preloadConfigurations();
+                // 预加载字体资源
+                preloadFonts();
+                
+                Log.d(TAG, "资源预加载完成");
+            } catch (Exception e) {
+                Log.e(TAG, "资源预加载失败", e);
+            }
+        });
+    }
+
+    private void preloadImages() {
+        List<String> criticalImages = Arrays.asList(
+            "launch_logo",
+            "launch_background",
+            "common_icons"
+        );
+        
+        for (String image : criticalImages) {
+            if (!cacheManager.isImageCached(image)) {
+                cacheManager.cacheImage(image);
+            }
+        }
+    }
+}
+
+// 缓存管理器
+public class CacheManager {
+    private static final int MAX_MEMORY_CACHE = 1024 * 1024 * 20; // 20MB
+    private static final int MAX_DISK_CACHE = 1024 * 1024 * 50;   // 50MB
+    
+    private LruCache<String, Bitmap> memoryCache;
+    private DiskLruCache diskCache;
+    
+    public CacheManager(Context context) {
+        initMemoryCache();
+        initDiskCache(context);
+    }
+    
+    private void initMemoryCache() {
+        memoryCache = new LruCache<String, Bitmap>(MAX_MEMORY_CACHE) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                return bitmap.getByteCount();
+            }
+        };
+    }
+}
+```
+
+**启动流程优化**：
+```java
+public class LaunchManager {
+    private static final String TAG = "LaunchManager";
+    private static final int LAUNCH_TIMEOUT = 3000; // 3秒超时
+    
+    private Context context;
+    private ResourceLoadManager resourceManager;
+    private Handler mainHandler;
+    
+    public LaunchManager(Context context) {
+        this.context = context;
+        this.resourceManager = new ResourceLoadManager(context);
+        this.mainHandler = new Handler(Looper.getMainLooper());
+    }
+    
+    /**
+     * 启动流程管理
+     */
+    public void startLaunchProcess() {
+        // 启动性能追踪
+        TraceCompat.beginSection("LaunchProcess");
+        
+        try {
+            // 1. 初始化基础组件
+            initializeComponents();
+            
+            // 2. 预加载资源
+            resourceManager.preloadResources();
+            
+            // 3. 检查更新
+            checkForUpdates();
+            
+            // 4. 设置超时保护
+            setLaunchTimeout();
+            
+        } finally {
+            TraceCompat.endSection();
+        }
+    }
+    
+    private void setLaunchTimeout() {
+        mainHandler.postDelayed(() -> {
+            if (isLaunchNotComplete()) {
+                handleLaunchTimeout();
+            }
+        }, LAUNCH_TIMEOUT);
+    }
+    
+    private void handleLaunchTimeout() {
+        Log.w(TAG, "启动超时，强制进入主界面");
+        // 执行超时后的降级策略
+        enterMainActivity();
+    }
+}
+```
+
+**错误处理与监控**：
+- **异常处理机制**：
+  * 实现全局异常捕获
+  * 提供优雅的降级方案
+  * 记录详细的错误日志
+- **性能监控**：
+  * 监控启动时间指标
+  * 跟踪内存使用情况
+  * 收集性能分析数据
+- **用户反馈**：
+  * 收集用户体验数据
+  * 分析启动失败原因
+  * 持续优化改进策略
+
+### 2.2 文本翻译功能实现
+
+#### 2.2.1 功能需求分析
+
+**核心功能需求**：
+- **文本输入与识别**：
+  * 支持多种文本输入方式（手动输入、粘贴、OCR识别）
+  * 智能识别输入文本语言
+  * 支持长文本分段翻译
+- **翻译功能**：
+  * 支持多语言互译（覆盖100+语种）
+  * 支持专业领域翻译（医学、法律、技术等）
+  * 提供多引擎翻译结果对比
+- **结果处理**：
+  * 支持翻译结果编辑与修正
+  * 提供发音和朗读功能
+  * 支持结果分享与导出
+
+**扩展功能需求**：
+- **智能词典**：
+  * 单词释义与例句
+  * 同义词、反义词推荐
+  * 词形变化与词根分析
+- **学习辅助**：
+  * 生词本功能
+  * 翻译历史记录
+  * 常用短语收藏
+
+#### 2.2.2 技术方案设计
+
+**架构设计**：
+```java
+// 翻译服务管理器
+public class TranslationManager {
+    private static final String TAG = "TranslationManager";
+    
+    private Context context;
+    private TranslationEngine primaryEngine;
+    private List<TranslationEngine> secondaryEngines;
+    private LanguageDetector languageDetector;
+    private TranslationCache translationCache;
+    
+    public TranslationManager(Context context) {
+        this.context = context;
+        initializeComponents();
+    }
+    
+    private void initializeComponents() {
+        // 初始化主翻译引擎
+        primaryEngine = new GoogleTranslationEngine();
+        
+        // 初始化备用翻译引擎
+        secondaryEngines = Arrays.asList(
+            new BaiduTranslationEngine(),
+            new YoudaoTranslationEngine()
+        );
+        
+        // 初始化语言检测器
+        languageDetector = new GoogleLanguageDetector();
+        
+        // 初始化翻译缓存
+        translationCache = new TranslationCache(context);
+    }
+    
+    /**
+     * 执行翻译任务
+     */
+    public CompletableFuture<TranslationResult> translate(String text, String targetLang) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 1. 检查缓存
+                TranslationResult cachedResult = translationCache.get(text, targetLang);
+                if (cachedResult != null) {
+                    return cachedResult;
+                }
+                
+                // 2. 检测源语言
+                String sourceLang = languageDetector.detect(text);
+                
+                // 3. 执行翻译
+                TranslationResult result = primaryEngine.translate(text, sourceLang, targetLang);
+                
+                // 4. 缓存结果
+                translationCache.put(text, targetLang, result);
+                
+                return result;
+            } catch (Exception e) {
+                Log.e(TAG, "翻译失败", e);
+                // 使用备用引擎重试
+                return retryWithSecondaryEngines(text, targetLang);
+            }
+        });
+    }
+}
+
+// 翻译结果数据类
+public class TranslationResult {
+    private String originalText;
+    private String translatedText;
+    private String sourceLang;
+    private String targetLang;
+    private List<String> definitions;
+    private List<String> examples;
+    private Map<String, String> alternatives;
+    
+    // getters and setters
+}
+```
+
+**用户界面设计**：
+```xml
+<!-- fragment_text_translation.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/text_translation" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/content_padding">
+
+            <!-- 语言选择区域 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_source_lang"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/auto_detect" />
+
+                <ImageButton
+                    android:id="@+id/btn_swap_langs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_swap_horiz"
+                    android:contentDescription="@string/swap_languages" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_target_lang"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/chinese" />
+            </LinearLayout>
+
+            <!-- 输入区域 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_medium">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/content_padding">
+
+                    <EditText
+                        android:id="@+id/et_source_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="120dp"
+                        android:gravity="top|start"
+                        android:background="@null"
+                        android:hint="@string/enter_text_hint"
+                        android:textSize="@dimen/text_size_medium" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="end">
+
+                        <ImageButton
+                            android:id="@+id/btn_clear"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_clear"
+                            android:contentDescription="@string/clear_text" />
+
+                        <ImageButton
+                            android:id="@+id/btn_paste"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_paste"
+                            android:contentDescription="@string/paste_text" />
+
+                        <ImageButton
+                            android:id="@+id/btn_camera"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_camera"
+                            android:contentDescription="@string/ocr_scan" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 翻译结果区域 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_medium">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/content_padding">
+
+                    <TextView
+                        android:id="@+id/tv_translated_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="120dp"
+                        android:textSize="@dimen/text_size_medium" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="end">
+
+                        <ImageButton
+                            android:id="@+id/btn_copy"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_copy"
+                            android:contentDescription="@string/copy_result" />
+
+                        <ImageButton
+                            android:id="@+id/btn_share"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_share"
+                            android:contentDescription="@string/share_result" />
+
+                        <ImageButton
+                            android:id="@+id/btn_tts"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_volume_up"
+                            android:contentDescription="@string/text_to_speech" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 翻译按钮 -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_translate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:text="@string/translate"
+        app:icon="@drawable/ic_translate" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+#### 2.2.3 交互体验优化
+
+**输入优化**：
+- **实时输入建议**：
+  * 根据输入内容提供相关短语推荐
+  * 支持历史输入快速选择
+  * 智能纠正常见拼写错误
+- **多模式输入**：
+  * 语音输入转文字
+  * OCR图片文字识别
+  * 系统剪贴板快速导入
+
+**翻译优化**：
+- **智能分段**：
+  * 自动识别段落结构
+  * 保持原文格式与排版
+  * 支持批量翻译处理
+- **专业优化**：
+  * 根据文本类型选择专业引擎
+  * 保留专业术语准确性
+  * 支持用户术语库定制
+
+**结果优化**：
+- **多维度展示**：
+  * 对照显示原文与译文
+  * 提供多引擎结果对比
+  * 显示相关词汇解释
+- **交互优化**：
+  * 支持快速发音与朗读
+  * 提供译文编辑与修正
+  * 便捷的分享与导出
+
+#### 2.2.4 性能与体验优化
+
+**性能优化**：
+- **请求优化**：
+  * 实现请求队列管理
+  * 采用增量更新机制
+  * 优化网络请求策略
+- **缓存优化**：
+  * 多级缓存架构设计
+  * 智能缓存预加载
+  * 定期清理过期缓存
+- **资源优化**：
+  * 按需加载翻译引擎
+  * 优化内存资源占用
+  * 控制后台进程开销
+
+**体验优化**：
+- **响应优化**：
+  * 提供实时翻译反馈
+  * 优化加载等待体验
+  * 实现平滑的动画过渡
+- **界面优化**：
+  * 支持深色模式适配
+  * 优化键盘交互体验
+  * 实现手势操作支持
+
+### 2.3 语音翻译功能实现
+
+#### 2.3.1 功能需求分析
+
+**核心功能需求**：
+- **语音输入处理**：
+  * 实时语音录制与识别
+  * 支持多语言语音识别
+  * 噪音消除与音频增强
+- **翻译处理**：
+  * 语音到文本的转换（STT）
+  * 文本的多语言翻译
+  * 文本到语音的转换（TTS）
+- **语音输出**：
+  * 高质量语音合成
+  * 支持多种发音人选择
+  * 语速和音调调节
+
+**扩展功能需求**：
+- **会话模式**：
+  * 双向实时对话翻译
+  * 多人会话支持
+  * 会话历史记录
+- **场景优化**：
+  * 场景噪音自适应
+  * 方言识别支持
+  * 专业领域适配
+
+#### 2.3.2 技术方案设计
+
+**音频处理架构**：
+```java
+// 音频管理器
+public class AudioManager {
+    private static final String TAG = "AudioManager";
+    private static final int SAMPLE_RATE = 16000;
+    private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
+    private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    
+    private Context context;
+    private AudioRecord audioRecord;
+    private boolean isRecording;
+    private NoiseReducer noiseReducer;
+    private AudioEnhancer audioEnhancer;
+    
+    public AudioManager(Context context) {
+        this.context = context;
+        this.noiseReducer = new NoiseReducer();
+        this.audioEnhancer = new AudioEnhancer();
+        initializeAudioRecord();
+    }
+    
+    private void initializeAudioRecord() {
+        int bufferSize = AudioRecord.getMinBufferSize(
+            SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
+            
+        audioRecord = new AudioRecord(
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            SAMPLE_RATE,
+            CHANNEL_CONFIG,
+            AUDIO_FORMAT,
+            bufferSize
+        );
+    }
+    
+    /**
+     * 开始录音并进行实时处理
+     */
+    public void startRecording(AudioProcessCallback callback) {
+        if (isRecording) return;
+        
+        isRecording = true;
+        audioRecord.startRecording();
+        
+        new Thread(() -> {
+            byte[] buffer = new byte[1024];
+            while (isRecording) {
+                int readSize = audioRecord.read(buffer, 0, buffer.length);
+                if (readSize > 0) {
+                    // 1. 降噪处理
+                    byte[] cleanedData = noiseReducer.process(buffer);
+                    // 2. 音频增强
+                    byte[] enhancedData = audioEnhancer.process(cleanedData);
+                    // 3. 回调处理后的音频数据
+                    callback.onAudioProcessed(enhancedData);
+                }
+            }
+        }).start();
+    }
+}
+
+// 语音识别管理器
+public class SpeechRecognitionManager {
+    private static final String TAG = "SpeechRecognitionManager";
+    
+    private Context context;
+    private SpeechRecognizer speechRecognizer;
+    private LanguageDetector languageDetector;
+    private TranslationManager translationManager;
+    
+    public SpeechRecognitionManager(Context context) {
+        this.context = context;
+        initializeComponents();
+    }
+    
+    private void initializeComponents() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+        languageDetector = new LanguageDetector();
+        translationManager = new TranslationManager(context);
+        
+        setupSpeechRecognizer();
+    }
+    
+    private void setupSpeechRecognizer() {
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(
+                    SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    String text = matches.get(0);
+                    // 检测语言并翻译
+                    processRecognizedText(text);
+                }
+            }
+            
+            // 其他回调方法实现...
+        });
+    }
+}
+```
+
+**用户界面设计**：
+```xml
+<!-- fragment_voice_translation.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 顶部工具栏 -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/voice_translation" />
+
+    <!-- 语言选择区域 -->
+    <LinearLayout
+        android:id="@+id/language_selector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/padding_medium"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_source_lang"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/auto_detect" />
+
+        <ImageButton
+            android:id="@+id/btn_swap_langs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/padding_small"
+            android:src="@drawable/ic_swap_horiz" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_target_lang"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/chinese" />
+    </LinearLayout>
+
+    <!-- 对话内容显示区域 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_conversation"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="@dimen/padding_medium"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/language_selector"
+        app:layout_constraintBottom_toTopOf="@id/bottom_controls" />
+
+    <!-- 底部控制区域 -->
+    <LinearLayout
+        android:id="@+id/bottom_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_medium"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- 录音波形显示 -->
+        <com.custom.WaveformView
+            android:id="@+id/waveform_view"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="@dimen/margin_medium" />
+
+        <!-- 控制按钮区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_clear"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="@dimen/margin_medium"
+                android:src="@drawable/ic_clear" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_record"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_mic"
+                app:fabSize="normal" />
+
+            <ImageButton
+                android:id="@+id/btn_settings"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="@dimen/margin_medium"
+                android:src="@drawable/ic_settings" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+#### 2.3.3 性能优化设计
+
+**音频处理优化**：
+- **实时处理优化**：
+  * 使用多线程并行处理
+  * 实现音频数据缓冲池
+  * 优化算法计算效率
+- **内存优化**：
+  * 复用音频缓冲区
+  * 及时释放无用资源
+  * 控制音频数据大小
+
+**识别优化**：
+- **准确率优化**：
+  * 自适应噪声处理
+  * 声学模型优化
+  * 上下文理解增强
+- **性能优化**：
+  * 模型量化与压缩
+  * 本地离线识别支持
+  * 增量识别实现
+
+**合成优化**：
+- **质量优化**：
+  * 高质量音频编解码
+  * 声音自然度提升
+  * 情感语气适配
+- **效率优化**：
+  * 音频缓存机制
+  * 流式合成处理
+  * 后台预加载策略
+
+#### 2.3.4 用户体验优化
+
+**交互优化**：
+- **操作流畅度**：
+  * 语音按钮响应优化
+  * 转场动画流畅化
+  * 状态反馈及时性
+- **可用性优化**：
+  * 直观的操作指引
+  * 清晰的状态展示
+  * 异常处理友好化
+
+**界面优化**：
+- **视觉反馈**：
+  * 实时波形显示
+  * 音量大小指示
+  * 识别状态动画
+- **布局优化**：
+  * 单手操作友好
+  * 深色模式支持
+  * 自适应屏幕布局
+
+**场景优化**：
+- **环境适应**：
+  * 背景噪音处理
+  * 远近距离适配
+  * 多场景模式切换
+- **特殊优化**：
+  * 方言识别支持
+  * 专业词汇处理
+  * 多人对话优化
+
+### 2.5 多语言支持实现
+
+#### 2.5.1 功能需求分析
+
+**核心功能需求**：
+- **语言管理**：
+  * 支持100+种语言
+  * 语言自动检测
+  * 语言偏好设置
+- **翻译引擎**：
+  * 多引擎整合
+  * 智能引擎选择
+  * 专业领域支持
+- **本地化支持**：
+  * 界面多语言
+  * 动态语言切换
+  * 区域特定适配
+
+**扩展功能需求**：
+- **语言学习**：
+  * 发音指导
+  * 例句展示
+  * 词汇学习
+- **用户定制**：
+  * 个性化设置
+  * 常用语言
+  * 专业词库
+
+#### 2.5.2 技术方案设计
+
+**语言管理架构**：
+```java
+// 语言管理器
+public class LanguageManager {
+    private static final String TAG = "LanguageManager";
+    
+    private Context context;
+    private SharedPreferences preferences;
+    private Map<String, LanguageInfo> supportedLanguages;
+    private List<LanguageEngine> translationEngines;
+    
+    public LanguageManager(Context context) {
+        this.context = context;
+        this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        initializeLanguages();
+        initializeEngines();
+    }
+    
+    /**
+     * 初始化支持的语言
+     */
+    private void initializeLanguages() {
+        supportedLanguages = new HashMap<>();
+        // 加载语言配置
+        try {
+            JSONObject config = loadLanguageConfig();
+            parseLanguageConfig(config);
+        } catch (Exception e) {
+            Log.e(TAG, "语言配置加载失败", e);
+        }
+    }
+    
+    /**
+     * 初始化翻译引擎
+     */
+    private void initializeEngines() {
+        translationEngines = new ArrayList<>();
+        // 添加支持的翻译引擎
+        translationEngines.add(new GoogleTranslateEngine());
+        translationEngines.add(new BaiduTranslateEngine());
+        translationEngines.add(new YoudaoTranslateEngine());
+    }
+    
+    /**
+     * 获取最佳翻译引擎
+     */
+    public TranslationEngine getBestEngine(String sourceLang, String targetLang) {
+        // 根据语言对、专业领域、历史表现选择最佳引擎
+        return engineSelector.selectBestEngine(sourceLang, targetLang);
+    }
+    
+    /**
+     * 检测文本语言
+     */
+    public String detectLanguage(String text) {
+        // 使用多个检测器组合结果
+        List<LanguageDetector> detectors = getLanguageDetectors();
+        Map<String, Float> confidenceMap = new HashMap<>();
+        
+        for (LanguageDetector detector : detectors) {
+            DetectionResult result = detector.detect(text);
+            updateConfidenceMap(confidenceMap, result);
+        }
+        
+        return selectMostConfidentLanguage(confidenceMap);
+    }
+}
+
+// 语言信息类
+public class LanguageInfo {
+    private String code;        // 语言代码
+    private String name;        // 语言名称
+    private String localName;   // 本地语言名称
+    private boolean rtl;        // 是否从右到左
+    private List<String> variants; // 语言变体
+    
+    // 构造方法和getter/setter
+}
+```
+
+**本地化实现**：
+```xml
+<!-- strings.xml (默认) -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">翻译助手</string>
+    <string name="settings">设置</string>
+    <string name="language_settings">语言设置</string>
+    <string name="translation_settings">翻译设置</string>
+    <string name="auto_detect">自动检测</string>
+    <string name="copy">复制</string>
+    <string name="share">分享</string>
+    <string name="favorite">收藏</string>
+    <!-- 更多字符串资源 -->
+</resources>
+
+<!-- strings.xml (en) -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Translation Assistant</string>
+    <string name="settings">Settings</string>
+    <string name="language_settings">Language Settings</string>
+    <string name="translation_settings">Translation Settings</string>
+    <string name="auto_detect">Auto Detect</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="favorite">Favorite</string>
+    <!-- More string resources -->
+</resources>
+```
+
+#### 2.5.3 性能优化设计
+
+**语言处理优化**：
+- **加载优化**：
+  * 语言包按需加载
+  * 资源文件压缩
+  * 缓存机制优化
+- **检测优化**：
+  * 本地语言检测
+  * 检测结果缓存
+  * 增量更新支持
+
+**翻译优化**：
+- **引擎优化**：
+  * 智能引擎调度
+  * 并行翻译处理
+  * 失败自动切换
+- **缓存优化**：
+  * 多级缓存策略
+  * 智能预加载
+  * 定期清理机制
+
+**资源优化**：
+- **内存优化**：
+  * 资源复用机制
+  * 内存占用控制
+  * 及时释放策略
+- **存储优化**：
+  * 增量更新支持
+  * 本地数据压缩
+  * 清理策略优化
+
+#### 2.5.4 用户体验优化
+
+**交互优化**：
+- **语言选择**：
+  * 快速语言切换
+  * 智能语言推荐
+  * 历史记录支持
+- **设置体验**：
+  * 个性化配置
+  * 快捷操作支持
+  * 实时预览效果
+
+**本地化优化**：
+- **界面适配**：
+  * RTL布局支持
+  * 字体自适应
+  * 文本换行处理
+- **文化适应**：
+  * 区域特定样式
+  * 文化禁忌避免
+  * 节日主题支持
+
+**特殊优化**：
+- **无障碍支持**：
+  * 屏幕阅读支持
+  * 高对比度模式
+  * 字体大小调节
+- **离线支持**：
+  * 基础功能可用
+  * 数据同步机制
+  * 网络恢复处理
+
+### 2.6 数据安全与隐私保护
+
+#### 2.6.1 功能需求分析
+
+**安全需求**：
+- **数据加密**：
+  * 本地数据加密
+  * 传输加密
+  * 密钥管理
+- **身份认证**：
+  * 用户认证
+  * 会话管理
+  * 访问控制
+- **数据保护**：
+  * 敏感数据处理
+  * 数据备份恢复
+  * 安全存储策略
+
+**隐私需求**：
+- **隐私控制**：
+  * 用户授权管理
+  * 数据收集控制
+  * 隐私设置选项
+- **合规要求**：
+  * 隐私政策
+  * 用户协议
+  * 监管合规
+
+#### 2.6.2 技术方案设计
+
+**安全架构**：
+```java
+// 安全管理器
+public class SecurityManager {
+    private static final String TAG = "SecurityManager";
+    
+    private Context context;
+    private EncryptionManager encryptionManager;
+    private AuthenticationManager authManager;
+    private KeyStoreManager keyStoreManager;
+    
+    public SecurityManager(Context context) {
+        this.context = context;
+        initializeComponents();
+    }
+    
+    private void initializeComponents() {
+        encryptionManager = new EncryptionManager();
+        authManager = new AuthenticationManager(context);
+        keyStoreManager = new KeyStoreManager();
+    }
+    
+    /**
+     * 数据加密
+     */
+    public byte[] encryptData(byte[] data, String keyAlias) {
+        try {
+            // 获取加密密钥
+            SecretKey key = keyStoreManager.getOrCreateKey(keyAlias);
+            
+            // 加密数据
+            return encryptionManager.encrypt(data, key);
+        } catch (Exception e) {
+            Log.e(TAG, "数据加密失败", e);
+            throw new SecurityException("加密失败", e);
+        }
+    }
+    
+    /**
+     * 数据解密
+     */
+    public byte[] decryptData(byte[] encryptedData, String keyAlias) {
+        try {
+            // 获取解密密钥
+            SecretKey key = keyStoreManager.getKey(keyAlias);
+            
+            // 解密数据
+            return encryptionManager.decrypt(encryptedData, key);
+        } catch (Exception e) {
+            Log.e(TAG, "数据解密失败", e);
+            throw new SecurityException("解密失败", e);
+        }
+    }
+}
+
+// 加密管理器
+public class EncryptionManager {
+    private static final String ALGORITHM = "AES/GCM/NoPadding";
+    private static final int IV_LENGTH = 12;
+    private static final int TAG_LENGTH = 128;
+    
+    /**
+     * 加密数据
+     */
+    public byte[] encrypt(byte[] data, SecretKey key) throws Exception {
+        // 生成随机IV
+        byte[] iv = new byte[IV_LENGTH];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
+        
+        // 初始化加密器
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+        
+        // 加密数据
+        byte[] encryptedData = cipher.doFinal(data);
+        
+        // 组合IV和加密数据
+        return ByteBuffer.allocate(iv.length + encryptedData.length)
+                .put(iv)
+                .put(encryptedData)
+                .array();
+    }
+    
+    /**
+     * 解密数据
+     */
+    public byte[] decrypt(byte[] encryptedData, SecretKey key) throws Exception {
+        // 提取IV
+        ByteBuffer buffer = ByteBuffer.wrap(encryptedData);
+        byte[] iv = new byte[IV_LENGTH];
+        buffer.get(iv);
+        
+        // 提取加密数据
+        byte[] ciphertext = new byte[buffer.remaining()];
+        buffer.get(ciphertext);
+        
+        // 初始化解密器
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
+        cipher.init(Cipher.DECRYPT_MODE, key, spec);
+        
+        // 解密数据
+        return cipher.doFinal(ciphertext);
+    }
+}
+```
+
+**权限管理**：
+```java
+// 权限管理器
+public class PermissionManager {
+    private static final String TAG = "PermissionManager";
+    
+    private Context context;
+    private SharedPreferences preferences;
+    
+    public PermissionManager(Context context) {
+        this.context = context;
+        this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+    
+    /**
+     * 检查权限
+     */
+    public boolean checkPermission(String permission) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return context.checkSelfPermission(permission) 
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+    
+    /**
+     * 请求权限
+     */
+    public void requestPermissions(Activity activity, 
+            String[] permissions, int requestCode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            activity.requestPermissions(permissions, requestCode);
+        }
+    }
+    
+    /**
+     * 处理权限结果
+     */
+    public void handlePermissionResult(String[] permissions, 
+            int[] grantResults, PermissionCallback callback) {
+        boolean allGranted = true;
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false;
+                break;
+            }
+        }
+        
+        if (allGranted) {
+            callback.onPermissionGranted();
+        } else {
+            callback.onPermissionDenied();
+        }
+    }
+}
+```
+
+#### 2.6.3 性能优化设计
+
+**加密优化**：
+- **算法优化**：
+  * 高效加密算法
+  * 密钥缓存机制
+  * 并行处理支持
+- **性能平衡**：
+  * 选择性加密
+  * 分块加密处理
+  * 异步加密实现
+
+**存储优化**：
+- **安全存储**：
+  * 分级存储策略
+  * 安全缓存机制
+  * 定期数据清理
+- **备份恢复**：
+  * 增量备份支持
+  * 快速恢复机制
+  * 验证完整性
+
+**访问优化**：
+- **认证优化**：
+  * 快速认证机制
+  * 会话管理优化
+  * 离线认证支持
+- **授权优化**：
+  * 批量授权处理
+  * 权限缓存机制
+  * 动态权限调整
+
+#### 2.6.4 用户体验优化
+
+**隐私体验**：
+- **隐私设置**：
+  * 清晰的隐私选项
+  * 简单的控制方式
+  * 实时的效果预览
+- **信息透明**：
+  * 数据使用说明
+  * 权限使用提示
+  * 隐私政策解释
+
+**安全体验**：
+- **认证体验**：
+  * 便捷的登录方式
+  * 记住登录状态
+  * 安全登出提示
+- **操作体验**：
+  * 安全操作提示
+  * 敏感操作确认
+  * 异常情况处理
+
+**合规体验**：
+- **政策展示**：
+  * 友好的政策展示
+  * 重要条款突出
+  * 更新提醒优化
+- **用户选择**：
+  * 灵活的授权选项
+  * 撤销权限支持
+  * 数据导出功能
+
+### 2.4 图片翻译功能实现
+
+#### 2.4.1 功能需求分析
+
+**核心功能需求**：
+- **图片输入处理**：
+  * 支持拍照实时识别
+  * 支持本地图片导入
+  * 支持屏幕截图识别
+- **文字识别处理**：
+  * 多语言OCR识别
+  * 复杂版面分析
+  * 图文混排处理
+- **翻译输出**：
+  * 原文替换翻译
+  * 双语对照显示
+  * 保持原始排版
+
+**扩展功能需求**：
+- **场景识别**：
+  * 文档类型识别
+  * 专业领域识别
+  * 特殊格式处理
+- **增强功能**：
+  * 图像优化增强
+  * 文字位置标注
+  * 实时预览效果
+
+#### 2.4.2 技术方案设计
+
+**图像处理架构**：
+```java
+// 图像处理管理器
+public class ImageProcessManager {
+    private static final String TAG = "ImageProcessManager";
+    
+    private Context context;
+    private ImageProcessor imageProcessor;
+    private OCREngine ocrEngine;
+    private TranslationManager translationManager;
+    
+    public ImageProcessManager(Context context) {
+        this.context = context;
+        initializeComponents();
+    }
+    
+    private void initializeComponents() {
+        imageProcessor = new ImageProcessor();
+        ocrEngine = new GoogleMLKitOCR();
+        translationManager = new TranslationManager(context);
+    }
+    
+    /**
+     * 处理图片翻译
+     */
+    public CompletableFuture<TranslationResult> processImage(Uri imageUri, String targetLang) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 1. 图像预处理
+                Bitmap processedImage = imageProcessor.preprocess(imageUri);
+                
+                // 2. OCR文字识别
+                List<TextBlock> textBlocks = ocrEngine.detectText(processedImage);
+                
+                // 3. 版面分析
+                LayoutAnalysisResult layout = analyzeLayout(textBlocks);
+                
+                // 4. 翻译处理
+                return translateTextBlocks(layout, targetLang);
+                
+            } catch (Exception e) {
+                Log.e(TAG, "图片翻译处理失败", e);
+                throw new ProcessingException("图片处理失败", e);
+            }
+        });
+    }
+    
+    /**
+     * 版面分析
+     */
+    private LayoutAnalysisResult analyzeLayout(List<TextBlock> textBlocks) {
+        LayoutAnalyzer analyzer = new LayoutAnalyzer();
+        return analyzer.analyze(textBlocks);
+    }
+    
+    /**
+     * 翻译文本块
+     */
+    private TranslationResult translateTextBlocks(
+            LayoutAnalysisResult layout, String targetLang) {
+        List<TextBlock> blocks = layout.getTextBlocks();
+        List<CompletableFuture<String>> translations = new ArrayList<>();
+        
+        // 并行翻译所有文本块
+        for (TextBlock block : blocks) {
+            translations.add(translationManager
+                .translate(block.getText(), targetLang)
+                .thenApply(result -> result.getTranslatedText()));
+        }
+        
+        // 等待所有翻译完成
+        CompletableFuture.allOf(translations.toArray(new CompletableFuture[0]))
+            .join();
+            
+        // 构建翻译结果
+        return buildTranslationResult(layout, translations);
+    }
+}
+
+// 图像预处理器
+public class ImageProcessor {
+    private static final int MAX_IMAGE_SIZE = 3072; // 最大图片尺寸
+    
+    /**
+     * 图像预处理
+     */
+    public Bitmap preprocess(Uri imageUri) {
+        Bitmap original = loadImage(imageUri);
+        
+        // 1. 图像缩放
+        Bitmap resized = resizeIfNeeded(original);
+        
+        // 2. 图像增强
+        Bitmap enhanced = enhance(resized);
+        
+        // 3. 图像矫正
+        return correctOrientation(enhanced);
+    }
+    
+    /**
+     * 图像增强
+     */
+    private Bitmap enhance(Bitmap input) {
+        // 1. 对比度增强
+        Bitmap contrasted = adjustContrast(input);
+        
+        // 2. 锐化处理
+        Bitmap sharpened = sharpen(contrasted);
+        
+        // 3. 降噪处理
+        return reduceNoise(sharpened);
+    }
+}
+```
+
+**用户界面设计**：
+```xml
+<!-- fragment_image_translation.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 顶部工具栏 -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/image_translation" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- 主要内容区域 -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/content_padding">
+
+            <!-- 图片显示区域 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/margin_medium">
+
+                <ImageView
+                    android:id="@+id/iv_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/image_to_translate" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 翻译结果区域 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/content_padding">
+
+                    <!-- 原文显示 -->
+                    <TextView
+                        android:id="@+id/tv_original_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textIsSelectable="true"
+                        android:textSize="@dimen/text_size_medium" />
+
+                    <!-- 分隔线 -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="@dimen/margin_medium"
+                        android:background="?android:attr/listDivider" />
+
+                    <!-- 译文显示 -->
+                    <TextView
+                        android:id="@+id/tv_translated_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textIsSelectable="true"
+                        android:textSize="@dimen/text_size_medium" />
+
+                    <!-- 操作按钮区域 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_medium"
+                        android:gravity="end"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_copy"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/copy"
+                            app:icon="@drawable/ic_content_copy" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_share"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/share"
+                            app:icon="@drawable/ic_share" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 底部操作栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        android:elevation="8dp"
+        android:orientation="horizontal"
+        android:padding="@dimen/padding_medium">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_camera"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/take_photo"
+            app:icon="@drawable/ic_camera" />
+
+        <Space
+            android:layout_width="@dimen/margin_medium"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_gallery"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/choose_image"
+            app:icon="@drawable/ic_image" />
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+#### 2.4.3 性能优化设计
+
+**图像处理优化**：
+- **预处理优化**：
+  * 智能图像压缩
+  * 自适应分辨率调整
+  * 并行处理优化
+- **内存优化**：
+  * Bitmap内存复用
+  * 大图片分块处理
+  * 及时回收资源
+
+**识别优化**：
+- **准确率优化**：
+  * 多模型融合识别
+  * 上下文辅助校正
+  * 专业领域优化
+- **速度优化**：
+  * 模型量化加速
+  * GPU加速计算
+  * 并行识别处理
+
+**翻译优化**：
+- **质量优化**：
+  * 专业术语处理
+  * 上下文理解优化
+  * 多引擎结果融合
+- **效率优化**：
+  * 批量翻译处理
+  * 增量更新机制
+  * 缓存结果复用
+
+#### 2.4.4 用户体验优化
+
+**交互优化**：
+- **操作便捷性**：
+  * 快速截图翻译
+  * 手势缩放控制
+  * 区域选择翻译
+- **反馈及时性**：
+  * 识别进度显示
+  * 翻译状态反馈
+  * 错误提示优化
+
+**显示优化**：
+- **结果呈现**：
+  * 原文译文对照
+  * 保持原始排版
+  * 支持文本选择
+- **视觉体验**：
+  * 高清图片显示
+  * 平滑动画过渡
+  * 深色模式适配
+
+**场景优化**：
+- **特殊场景**：
+  * 低光环境优化
+  * 复杂背景处理
+  * 大文档支持
+- **功能增强**：
+  * 批量图片处理
+  * 历史记录管理
+  * 翻译结果导出
 
 **响应式设计**：
 ```xml
