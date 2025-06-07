@@ -20,9 +20,21 @@ android {
         }
     }
 
+    // 添加签名配置
+    signingConfigs {
+        release {
+            storeFile file('caiths.keystore')
+            storePassword "caiths.com"
+            keyAlias "caiths"
+            keyPassword "caiths.com"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release // 使用发布签名配置
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
